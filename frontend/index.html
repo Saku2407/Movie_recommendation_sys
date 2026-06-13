@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinéma — Movie Recommendation Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Barlow:wght@300;400;500&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+  <!-- GRAIN OVERLAY -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a href="#" class="logo" onclick="showPage('home')">
+        <span class="logo-icon">◈</span>
+        <span class="logo-text">Cinéma</span>
+      </a>
+      <nav class="nav">
+        <button class="nav-btn active" id="nav-home"    onclick="showPage('home')">Discover</button>
+        <button class="nav-btn"        id="nav-for-you" onclick="showPage('for-you')">For You</button>
+        <button class="nav-btn"        id="nav-browse"  onclick="showPage('browse')">Browse</button>
+        <button class="nav-btn"        id="nav-model"   onclick="showPage('model')">Model</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── PAGE: HOME ──────────────────────────────────────────────────────── -->
+  <main id="page-home" class="page active">
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="hero-eyebrow">ML-Powered · Personalised</div>
+        <h1 class="hero-title">What will you<br><em>watch tonight?</em></h1>
+        <p class="hero-lead">Three recommendation engines — content-based, collaborative filtering, and SVD matrix factorisation — working together to find your next favourite film.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="showPage('for-you')">Get recommendations →</button>
+          <button class="btn-ghost"   onclick="showPage('browse')">Browse catalogue</button>
+        </div>
+      </div>
+      <div class="hero-mosaic" id="hero-mosaic" aria-hidden="true"></div>
+    </section>
+
+    <section class="trending-section">
+      <div class="section-header">
+        <h2 class="section-title">Trending Now</h2>
+        <span class="section-sub">Ranked by weighted rating × popularity</span>
+      </div>
+      <div class="movie-row" id="trending-row"></div>
+    </section>
+
+    <section class="genre-section">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Genre</h2>
+      </div>
+      <div class="genre-chips" id="genre-chips"></div>
+    </section>
+
+  </main>
+
+  <!-- ── PAGE: FOR YOU ───────────────────────────────────────────────────── -->
+  <main id="page-for-you" class="page">
+
+    <div class="page-hero-bar">
+      <h1 class="page-title">For You</h1>
+      <p class="page-sub">Personalised picks using SVD matrix factorisation</p>
+    </div>
+
+    <div class="user-controls">
+      <div class="user-input-wrap">
+        <label class="control-label" for="user-id-input">Your User ID</label>
+        <div class="user-id-row">
+          <input type="number" id="user-id-input" class="text-input" min="1" max="500" value="1" placeholder="1–500">
+          <button class="btn-primary" id="get-recs-btn" onclick="loadPersonalRecs()">Get picks</button>
+        </div>
+        <p class="hint">Any ID from 1–500. Try a few different ones to see different tastes.</p>
+      </div>
+
+      <div class="method-toggle">
+        <label class="control-label">Algorithm</label>
+        <div class="toggle-group">
+          <button class="toggle-opt active" id="method-svd" onclick="setMethod('svd')">SVD</button>
+          <button class="toggle-opt"        id="method-cf"  onclick="setMethod('cf')">User CF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="recs-loading" class="loading-state" style="display:none">
+      <div class="spinner"></div>
+      <span>Crunching the matrix…</span>
+    </div>
+
+    <div id="recs-result" style="display:none">
+      <div class="result-meta" id="recs-meta"></div>
+      <div class="movie-grid" id="recs-grid"></div>
+    </div>
+
+  </main>
+
+  <!-- ── PAGE: BROWSE ────────────────────────────────────────────────────── -->
+  <main id="page-browse" class="page">
+
+    <div class="page-hero-bar">
+      <h1 class="page-title">Catalogue</h1>
+      <p class="page-sub" id="browse-count">200 films</p>
+    </div>
+
+    <div class="browse-controls">
+      <div class="genre-filter" id="genre-filter-row">
+        <button class="chip active" data-genre="" onclick="filterGenre(this,'')">All</button>
+      </div>
+      <div class="sort-wrap">
+        <label class="control-label" for="sort-select">Sort by</label>
+        <select id="sort-select" class="select-input" onchange="filterGenre(document.querySelector('.chip.active'), document.querySelector('.chip.active').dataset.genre)">
+          <option value="rating">Top rated</option>
+          <option value="popular">Most popular</option>
+          <option value="year">Newest</option>
+          <option value="title">A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="browse-loading" class="loading-state">
+      <div class="spinner"></div>
+    </div>
+    <div class="movie-grid" id="browse-grid" style="display:none"></div>
+    <div id="browse-empty" class="empty-state" style="display:none">No films match that filter.</div>
+
+  </main>
+
+  <!-- ── PAGE: MODEL ─────────────────────────────────────────────────────── -->
+  <main id="page-model" class="page">
+
+    <div class="page-hero-bar">
+      <h1 class="page-title">Under the Hood</h1>
+      <p class="page-sub">How the recommendation engine works</p>
+    </div>
+
+    <div class="model-grid" id="model-stats"></div>
+
+    <div class="algo-section">
+      <h2 class="section-title" style="margin-bottom:2rem">Three Approaches</h2>
+      <div class="algo-cards">
+
+        <div class="algo-card">
+          <div class="algo-num">01</div>
+          <h3 class="algo-title">Content-Based Filtering</h3>
+          <p class="algo-desc">Represents each movie as a TF-IDF vector of genres, director, and year. Computes cosine similarity between vectors to find films closest in "feature space". Works for any user — no ratings needed.</p>
+          <div class="algo-tags"><span class="tag">TF-IDF</span><span class="tag">Cosine similarity</span><span class="tag">No cold-start</span></div>
+        </div>
+
+        <div class="algo-card">
+          <div class="algo-num">02</div>
+          <h3 class="algo-title">User-Based Collaborative Filtering</h3>
+          <p class="algo-desc">Finds K most similar users via cosine similarity on the ratings matrix. Predicts unseen ratings as a weighted average of those users' scores. Captures "users like you" taste patterns.</p>
+          <div class="algo-tags"><span class="tag">Ratings matrix</span><span class="tag">Pearson / cosine</span><span class="tag">KNN</span></div>
+        </div>
+
+        <div class="algo-card">
+          <div class="algo-num">03</div>
+          <h3 class="algo-title">SVD Matrix Factorisation</h3>
+          <p class="algo-desc">Decomposes the sparse user-item matrix R ≈ U × Σ × Vᵀ into latent user and item factors. Each factor represents a hidden "taste axis". Predictions come from the dot product of user and item vectors.</p>
+          <div class="algo-tags"><span class="tag">Latent factors k=50</span><span class="tag">SGD optimisation</span><span class="tag">Regularisation</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="pipeline-section">
+      <h2 class="section-title" style="margin-bottom:1.5rem">ML Pipeline</h2>
+      <div class="pipeline">
+        <div class="pipe-step"><span class="pipe-n">01</span><span class="pipe-l">Generate data</span></div>
+        <div class="pipe-arr">→</div>
+        <div class="pipe-step"><span class="pipe-n">02</span><span class="pipe-l">Build user-item matrix</span></div>
+        <div class="pipe-arr">→</div>
+        <div class="pipe-step"><span class="pipe-n">03</span><span class="pipe-l">TF-IDF feature vectors</span></div>
+        <div class="pipe-arr">→</div>
+        <div class="pipe-step"><span class="pipe-n">04</span><span class="pipe-l">Train SVD (Surprise)</span></div>
+        <div class="pipe-arr">→</div>
+        <div class="pipe-step"><span class="pipe-n">05</span><span class="pipe-l">Flask REST API</span></div>
+        <div class="pipe-arr">→</div>
+        <div class="pipe-step"><span class="pipe-n">06</span><span class="pipe-l">Frontend UI</span></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── MOVIE DETAIL MODAL ──────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)" style="display:none">
+    <div class="modal" id="modal">
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <div class="modal-poster" id="modal-poster"></div>
+      <div class="modal-body">
+        <div class="modal-meta" id="modal-meta"></div>
+        <h2 class="modal-title" id="modal-title"></h2>
+        <div class="modal-genres" id="modal-genres"></div>
+        <p class="modal-overview" id="modal-overview"></p>
+        <div class="modal-stats" id="modal-stats"></div>
+        <div class="modal-similar-label">Similar films</div>
+        <div class="movie-row" id="modal-similar"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    Built with Python · scikit-surprise · scikit-learn · Flask · Vanilla JS<br>
+    <small>Synthetic dataset for educational purposes.</small>
+  </footer>
+
+  <script src="static/js/main.js"></script>
+</body>
+</html>

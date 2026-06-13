@@ -1,0 +1,16 @@
+{
+  "svd_rmse": 0.6095,
+  "svd_mae": 0.4902,
+  "cv_rmse": 0.6065,
+  "cv_rmse_std": 0.0065,
+  "n_users": 500,
+  "n_movies": 200,
+  "n_ratings": 25161,
+  "sparsity": 0.7484,
+  "svd_params": {
+    "n_factors": 50,
+    "n_epochs": 30,
+    "lr_all": 0.005,
+    "reg_all": 0.02
+  }
+}
